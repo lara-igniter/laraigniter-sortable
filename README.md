@@ -103,21 +103,27 @@ Edit the published file — your values will automatically override the package 
 |-----|---------|-------------|
 | `columns` | `alpha / amount / numeric` groups | Maps column names to icon class + sort type |
 | `enable_icons` | `true` | Show/hide the sort icon next to the link text |
-| `default_icon_set` | `fal fa-sort` | Icon class used for unrecognised column types |
+| `default_icon_set` | `fa fa-sort` | Icon class used for unrecognised column types |
 | `default_icon_type` | `default` | Fallback type key for suffix lookup |
-| `sortable_icon` | `fal fa-sort fa-lg` | Icon shown when the column is not currently sorted |
+| `sortable_icon` | `fa fa-sort` | Icon shown when the column is not currently sorted |
 | `clickable_icon` | `false` | When `true` the icon itself is wrapped inside the `<a>` |
-| `icon_text_separator` | `<span class="ml-2"></span>` | HTML placed between link text and icon |
-| `asc_*_suffix` | various `-down` / `-up` | Icon class suffix appended for ascending sorts |
-| `desc_*_suffix` | various `-up` / `-up-alt` | Icon class suffix appended for descending sorts |
-| `anchor_class` | `d-flex text-white` | CSS class on every sort `<a>` |
+| `icon_text_separator` | `''` (empty string) | String/HTML placed between the link text and the icon |
+| `asc_default_suffix` | `-asc` | Icon suffix for ascending on untyped columns |
+| `desc_default_suffix` | `-desc` | Icon suffix for descending on untyped columns |
+| `asc_alpha_suffix` | `-asc` | Icon suffix for ascending on alpha columns |
+| `desc_alpha_suffix` | `-desc` | Icon suffix for descending on alpha columns |
+| `asc_amount_suffix` | `-asc` | Icon suffix for ascending on amount columns |
+| `desc_amount_suffix` | `-desc` | Icon suffix for descending on amount columns |
+| `asc_numeric_suffix` | `-asc` | Icon suffix for ascending on numeric columns |
+| `desc_numeric_suffix` | `-desc` | Icon suffix for descending on numeric columns |
+| `anchor_class` | `null` | CSS class on every sort `<a>` — none added when `null` |
 | `active_anchor_class` | `null` | Extra class added when the column is the active sort |
 | `order_anchor_class_prefix` | `null` | Prefix for a dynamic direction class on the active anchor |
 | `formatting_function` | `null` | Callable applied to the column title (e.g. `mb_strtoupper`) |
 | `title_inside_anchor` | `false` | Use the raw column name as title when none is passed |
 | `format_custom_titles` | `true` | Apply `formatting_function` to explicit titles too |
 | `inject_title_as` | `null` | Query-string key to inject the formatted title into |
-| `default_order` | `desc` | Direction used when no explicit order is provided |
+| `default_order` | `asc` | Direction used when no explicit order is provided |
 | `default_order_unsorted` | `asc` | Direction used for columns not currently sorted |
 | `default_first_column` | `id` | Column used when the model has no `?sort=` param and no explicit default |
 
@@ -135,17 +141,18 @@ namespace App\Models;
 use App\Core\MY_Model;
 use Laraigniter\Sortable\Traits\Sortable;
 
-class Member extends MY_Model
+class User extends MY_Model
 {
     use Sortable;
 
-    protected $table = 'oc_members';
-
-    // Declare which columns may be sorted.
+    /**
+     * The sortable attributes.
+     *
+     * @var array<int, string>
+     */
     public array $sortable = [
         'id',
-        'last_name',
-        'registration_number',
+        'name',
         'created_at',
     ];
 }
@@ -156,13 +163,13 @@ class Member extends MY_Model
 ```php
 // Sorts by ?sort= & ?order= from the request.
 // Falls back to config('sortable.default_first_column') when no params are present.
-$members = $this->member->sortable()->paginate(15);
+$users = (new User())->sortable()->paginate(15);
 
 // Or pass an explicit default:
-$members = $this->member->sortable('last_name')->paginate(15);
+$users = (new User())->sortable('name')->paginate(15);
 
 // Or pass a default direction too:
-$members = $this->member->sortable(['created_at' => 'desc'])->paginate(15);
+$users = (new User())->sortable(['created_at' => 'desc'])->paginate(15);
 ```
 
 `sortable()` qualifies the column with the model's own table name automatically, so joins never produce ambiguous `ORDER BY` clauses.
@@ -175,8 +182,7 @@ The `@sortable` directive is registered by `SortableServiceProvider` and outputs
 <thead>
     <tr>
         <th>@sortable('id', '#')</th>
-        <th>@sortable('last_name', 'Επώνυμο')</th>
-        <th>@sortable('registration_number', 'Αρ. Μητρώου')</th>
+        <th>@sortable('name', 'Ονοματεπώνυμο')</th>
         <th>@sortable('created_at', 'Εγγραφή')</th>
     </tr>
 </thead>
@@ -198,7 +204,7 @@ The `@sortable` directive is registered by `SortableServiceProvider` and outputs
 #### Example with extra attributes
 
 ```blade
-@sortable('last_name', 'Επώνυμο', [], ['class' => 'text-warning'])
+@sortable('name', 'Ονοματεπώνυμο', [], ['class' => 'text-warning'])
 ```
 
 ---
