@@ -1,0 +1,31 @@
+{
+    "name": "lara-igniter/laraigniter-sortable",
+    "description": "Sortable behavior package for Laraigniter",
+    "license": "MIT",
+    "type": "library",
+    "keywords": [
+        "laraigniter",
+        "sort",
+        "sortable",
+        "sorting"
+    ],
+    "require": {
+        "php": "^7.4",
+        "lara-igniter/framework": "^1.51"
+    },
+    "autoload": {
+        "psr-4": {
+            "Laraigniter\\Sortable\\": "src/"
+        }
+    },
+    "extra": {
+        "laraigniter": {
+            "providers": [
+                "Laraigniter\\Sortable\\SortableServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
+
