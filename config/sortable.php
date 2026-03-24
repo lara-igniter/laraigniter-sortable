@@ -15,46 +15,16 @@
 $config = [
     'columns' => [
         'alpha'   => [
-            'rows'  => [
-                'name',
-                'description',
-                'etiology',
-                'note',
-                'last_name',
-                'father_name',
-                'mother_name',
-                'member_name',
-                'supplier_name',
-                'speciality_name',
-                'payment_method',
-            ],
-            'class' => 'fal fa-sort-alpha',
+            'rows'  => ['description', 'email', 'name', 'slug'],
+            'class' => 'fa fa-sort-alpha',
         ],
         'amount'  => [
-            'rows'  => [
-                'amount',
-                'debt_amount',
-                'paid_amount',
-                'unpaid_amount',
-                'price',
-            ],
-            'class' => 'fal fa-sort-amount',
+            'rows'  => ['amount', 'price'],
+            'class' => 'fa fa-sort-amount',
         ],
         'numeric' => [
-            'rows'  => [
-                'id',
-                'receipt_number',
-                'payment_number',
-                'registration_number',
-                'license_number',
-                'expiration_license_date',
-                'expense_date',
-                'receipt_date',
-                'payment_date',
-                'created_at',
-                'updated_at',
-            ],
-            'class' => 'fal fa-sort-numeric',
+            'rows'  => ['id', 'level',  'phone_number', 'created_at', 'updated_at'],
+            'class' => 'fa fa-sort-numeric',
         ],
     ],
 
@@ -66,7 +36,7 @@ $config = [
     /*
     | Defines an icon set to use when sorted data is the none above (alpha nor amount nor numeric)
     */
-    'default_icon_set' => 'fal fa-sort',
+    'default_icon_set' => 'fa fa-sort',
 
     /*
     | Defines an icon type to use another class icon based-on-type (alpha or amount or numeric)
@@ -76,7 +46,7 @@ $config = [
     /*
     | Icon that shows when generating a sortable link while column is not sorted
     */
-    'sortable_icon' => 'fal fa-sort fa-lg',
+    'sortable_icon' => 'fa fa-sort',
 
     /*
     | Generated icon is clickable non-clickable (default)
@@ -87,52 +57,52 @@ $config = [
     | Icon and text separator (any string)
     | in case of 'clickable_icon' => true; separator creates possibility to style icon and anchor-text properly
     */
-    'icon_text_separator' => '<span class="ml-2"></span>',
+    'icon_text_separator' => '',
 
     /*
     | Suffix class that is appended when ascending order is applied
     */
-    'asc_default_suffix' => '-down fa-lg',
+    'asc_default_suffix' => '-asc',
 
     /*
     | Suffix class that is appended when descending order is applied
     */
-    'desc_default_suffix' => '-up fa-lg',
+    'desc_default_suffix' => '-desc',
 
     /*
     | Suffix class that is appended when ascending order is applied
     */
-    'asc_alpha_suffix' => '-down fa-lg',
+    'asc_alpha_suffix' => '-asc',
 
     /*
     | Suffix class that is appended when descending order is applied
     */
-    'desc_alpha_suffix' => '-up-alt fa-lg',
+    'desc_alpha_suffix' => '-desc',
 
     /*
     | Suffix class that is appended when ascending order is applied
     */
-    'asc_amount_suffix' => '-down-alt fa-lg',
+    'asc_amount_suffix' => '-asc',
 
     /*
     | Suffix class that is appended when descending order is applied
     */
-    'desc_amount_suffix' => '-up fa-lg',
+    'desc_amount_suffix' => '-desc',
 
     /*
     | Suffix class that is appended when ascending order is applied
     */
-    'asc_numeric_suffix' => '-down fa-lg',
+    'asc_numeric_suffix' => '-asc',
 
     /*
     | Suffix class that is appended when descending order is applied
     */
-    'desc_numeric_suffix' => '-up-alt fa-lg',
+    'desc_numeric_suffix' => '-desc',
 
     /*
     | Default anchor class, if value is null, none is added
     */
-    'anchor_class' => 'd-flex text-white',
+    'anchor_class' => null,
 
     /*
     | Default active anchor class, if value is null none is added
@@ -168,7 +138,7 @@ $config = [
     /*
     | default order for: $this->user->sortable('id')->paginate(10) usage
     */
-    'default_order' => 'desc',
+    'default_order' => 'asc',
 
     /*
     | Default order for non-sorted columns
