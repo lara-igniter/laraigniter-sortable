@@ -209,6 +209,117 @@ The `@sortable` directive is registered by `SortableServiceProvider` and outputs
 
 ---
 
+## Sorting by related-model columns (`applyRelationOrderBy`)
+
+The `Sortable` trait supports sorting by a column that lives in a **related table** using dot-notation (e.g. `father.name`).  
+When such a value is found in the model's `$sortable` array, the private `applyRelationOrderBy()` method is called automatically by `sortable()` — you never invoke it directly.
+
+### How it works
+
+1. The column string (e.g. `father.name`) is split into `$relation` and `$field`.
+2. The model's `$hasOne` property is consulted to find the JOIN definition for `$relation`.
+3. A `LEFT JOIN` is added to the query, aliased as `{relation}_{foreignTable}` (e.g. `father_parents`).
+4. `{table}.*` is explicitly selected first, then `{alias}.{field} AS {relation}_{field}` (e.g. `father_parents.name AS father_name`) — this avoids the `SELECT expr, *` syntax error that MySQL rejects.
+5. `ORDER BY {alias}.{field}` is appended.
+
+### Defining `$hasOne` on your model
+
+Two definition styles are supported:
+
+#### Associative form (verbose, recommended)
+
+```php
+public array $hasOne = [
+    'father' => [
+        'foreign_table' => 'parents',   // the related table name
+        'foreign_key'   => 'id',        // PK on the related table
+        'local_key'     => 'father_id', // FK on THIS table
+    ],
+];
+```
+
+#### Short-form (positional array)
+
+```php
+public array $hasOne = [
+    // [ ModelName, foreign_key_on_related_table, local_key_on_this_table ]
+    'father' => ['ParentModel', 'id', 'father_id'],
+];
+```
+
+When the short-form is used the trait calls `$this->load->model($modelName)` and reads `->table` from the loaded model instance to discover the foreign table name.
+
+### Registering the relation column as sortable
+
+Add the dot-notation key to the model's `$sortable` array:
+
+```php
+public array $sortable = [
+    'id',
+    'name',
+    'father.name',   // ← dot-notation triggers applyRelationOrderBy
+    'created_at',
+];
+```
+
+### Full model example
+
+```php
+<?php
+
+namespace App\Models;
+
+use App\Core\MY_Model;
+use Laraigniter\Sortable\Traits\Sortable;
+
+class Child extends MY_Model
+{
+    use Sortable;
+
+    public string $table = 'children';
+
+    public array $sortable = [
+        'id',
+        'name',
+        'father.name',
+    ];
+
+    public array $hasOne = [
+        'father' => [
+            'foreign_table' => 'parents',
+            'foreign_key'   => 'id',
+            'local_key'     => 'father_id',
+        ],
+    ];
+}
+```
+
+Calling `(new Child())->sortable(['father.name' => 'asc'])->paginate(15)` will produce SQL similar to:
+
+```sql
+SELECT children.*, father_parents.name AS father_name
+FROM children
+LEFT JOIN parents AS father_parents ON father_parents.id = children.father_id
+ORDER BY father_parents.name ASC
+LIMIT 15
+```
+
+### Fallback behaviour
+
+If `$hasOne` does not contain the requested relation, the method falls back to a plain `ORDER BY {table}.{relation}_{field}` (replacing `.` with `_`) rather than throwing an exception.
+
+### Using the result column in a Blade view
+
+Register the directive as usual — just use the dot-notation key as the `column` argument:
+
+```blade
+<th>@sortable('father.name', 'Father')</th>
+```
+
+`SortableLink` will pass `?sort=father.name` in the generated URL, which `sortable()` picks up on the next request.
+
+---
+
 ## How `SortableState` works
 
 `SortableState` is a static per-request store. When `sortable()` resolves a default sort (no `?sort=` in the URL), it calls:
@@ -229,4 +340,5 @@ SortableState::set($column, $direction);
 | `SortableLink` | `Laraigniter\Sortable` | Builds the complete `<a>` sort anchor HTML |
 | `SortableState` | `Laraigniter\Sortable` | Static store for the active default sort column/direction |
 | `Traits\Sortable` | `Laraigniter\Sortable\Traits` | Model trait — adds `sortable()`, `sortables()`, `getSortables()`, `hasSortable()` |
+| `Traits\Sortable::applyRelationOrderBy()` | `Laraigniter\Sortable\Traits` | Private helper — resolves a dot-notation `relation.field` column into a LEFT JOIN + explicit SELECT + ORDER BY |
 

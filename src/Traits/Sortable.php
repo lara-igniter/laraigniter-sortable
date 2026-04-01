@@ -37,12 +37,13 @@ trait Sortable
             }
         }
 
-        // Apply directly to the CI query builder so it is captured by
-        // captureBuilderState() and survives the count_rows() reset in paginate().
         foreach ($this->orderBy as $column => $direction) {
-            // Qualify unqualified columns with the model's own table so that any
-            // JOIN which introduces a same-named column does not make the ORDER BY
-            // clause ambiguous.
+            // Dot-notation in $sortable (e.g. 'father.name') → resolve via JOIN.
+            if (strpos($column, '.') !== false && in_array($column, $this->sortable ?? [])) {
+                $this->applyRelationOrderBy($column, $direction);
+                continue;
+            }
+
             if (strpos($column, '.') === false) {
                 $column = $this->table . '.' . $column;
             }
@@ -50,14 +51,72 @@ trait Sortable
             $this->database->order_by($column, $direction);
         }
 
-        // Inform SortableLink of the active default sort so it can render
-        // the correct icon/active state on first load (no GET params).
+        // Inform SortableLink of the active sort so it renders the correct icon.
         if (!empty($this->orderBy)) {
             $col = array_key_first($this->orderBy);
             SortableState::set($col, $this->orderBy[$col]);
         }
 
         return $this;
+    }
+
+    /**
+     * Apply a JOIN-based ORDER BY for a dot-notation sortable column.
+     *
+     * Resolves the hasOne relation, adds a LEFT JOIN aliased as
+     * `{relation}_{foreign_table}`, selects `{relation}_{field}` as a scalar
+     * attribute on each result row, and orders by the joined column.
+     *
+     * @param string $column
+     * @param string $direction
+     * @return void
+     */
+    private function applyRelationOrderBy(string $column, string $direction): void
+    {
+        [$relation, $field] = explode('.', $column, 2);
+
+        $hasOne = $this->hasOne ?? [];
+
+        if (!isset($hasOne[$relation])) {
+            $this->database->order_by($this->table . '.' . str_replace('.', '_', $column), $direction);
+            return;
+        }
+
+        $def = $hasOne[$relation];
+
+        if (Arr::isAssoc($def)) {
+            $foreignTable = $def['foreign_table'] ?? null;
+            $foreignKey   = $def['foreign_key'] ?? 'id';
+            $localKey     = $def['local_key'] ?? null;
+
+            if (!$foreignTable || !$localKey) {
+                return;
+            }
+        } else {
+            // Short-form: ['ModelName', 'foreign_key', 'local_key']
+            $foreignModelName = strtolower((string) $def[0]);
+            $foreignKey       = $def[1];
+            $localKey         = $def[2];
+
+            $this->load->model($foreignModelName);
+            $foreignTable = $this->{$foreignModelName}->table;
+        }
+
+        $alias = $relation . '_' . $foreignTable;
+
+        $this->database->join(
+            $foreignTable . ' AS ' . $alias,
+            $alias . '.' . $foreignKey . ' = ' . $this->table . '.' . $localKey,
+            'left'
+        );
+
+        // Nullify $this->columns so get_all() does not append a bare `*` after
+        // our explicit SELECT — MySQL rejects `SELECT expr, *` syntax.
+        // We emit table.* first instead, which is valid before other expressions.
+        $this->columns = null;
+        $this->database->select($this->table . '.*', false);
+        $this->database->select($alias . '.' . $field . ' AS ' . $relation . '_' . $field, false);
+        $this->database->order_by($alias . '.' . $field, $direction);
     }
 
     /**
