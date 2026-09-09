@@ -2,7 +2,7 @@
 
 namespace Laraigniter\Sortable\Traits;
 
-use App\Core\MY_Model;
+use Elegant\Database\Model\Model;
 use Elegant\Foundation\Exceptions\MassAssignmentException;
 use Elegant\Support\Arr;
 use Elegant\Support\Collection;
@@ -19,9 +19,9 @@ trait Sortable
      * Apply sorting to the current query builder state.
      *
      * @param array|string|null $defaultParameters
-     * @return MY_Model
+     * @return Model
      */
-    public function sortable($defaultParameters = null): MY_Model
+    public function sortable($defaultParameters = null): Model
     {
         if (request()->has('sort') && request()->has('order')) {
             $this->orderBy = $this->formatToParameters([

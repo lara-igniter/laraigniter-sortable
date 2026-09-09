@@ -17,7 +17,7 @@ laraigniter-sortable/
     ├── SortableLink.php       ← renders the <a> sort anchor + icon
     ├── SortableState.php      ← holds the active default sort per request
     └── Traits/
-        └── Sortable.php       ← use in any MY_Model subclass
+        └── Sortable.php       ← use in any Model subclass
 ```
 
 ---
@@ -138,10 +138,10 @@ Edit the published file — your values will automatically override the package 
 
 namespace App\Models;
 
-use App\Core\MY_Model;
+use Elegant\Database\Model\Model;
 use Laraigniter\Sortable\Traits\Sortable;
 
-class User extends MY_Model
+class User extends Model
 {
     use Sortable;
 
@@ -269,10 +269,10 @@ public array $sortable = [
 
 namespace App\Models;
 
-use App\Core\MY_Model;
+use Elegant\Database\Model\Model;
 use Laraigniter\Sortable\Traits\Sortable;
 
-class Child extends MY_Model
+class Child extends Model
 {
     use Sortable;
 
